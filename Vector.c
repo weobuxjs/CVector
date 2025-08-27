@@ -1,200 +1,205 @@
 #include "Vector.h"
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 struct Vector
 {
     void* data;
-    size_t length;  
+    size_t length;
+    size_t capacity;  
     size_t elemsize;  
 };
-Vector* init_vector(size_t size, size_t element_size)
+Vector* v_init_vector(size_t size, size_t element_size)
 {
     Vector* arr = (Vector*)malloc(sizeof(Vector));
-    arr->data = calloc(size, element_size);
+    size_t calloc_size = (size <= INIT_CAPACITY ? INIT_CAPACITY : size * CAP_INCREASE);
+    arr->data = calloc(calloc_size, element_size);
     arr->elemsize = element_size;
     arr->length = 0;
+    arr->capacity = 0;
     if(arr->data)
     {
         arr->length = size;
+        arr->capacity = calloc_size;
     }
     return arr;
 }
-size_t len(Vector* arr)
+// internal functions
+static int adjust_cap(Vector* arr, size_t elemsize)
 {
-	if(!arr)
-	{
-		return 0;
-	}
+    if(elemsize == arr->capacity)
+    {
+        return 1;
+    }
+    size_t nearest_cap;
+    if(!elemsize)
+    {
+        nearest_cap = 1;
+    }
+    else 
+    {
+        nearest_cap = (size_t) pow(2, ceill(log2(elemsize)));
+    }
+    void* new_data = realloc(arr->data, nearest_cap * arr->elemsize);
+    if(!new_data)
+    {
+        return 0;
+    }
+    arr->data = new_data;
+    arr->capacity = nearest_cap;   
+    return 1;
+}
+//Utils
+size_t v_len(Vector* arr)
+{
     return arr->length;
 }
-int is_empty(Vector* arr)
+int v_is_empty(Vector* arr)
 {
-    if(arr && len(arr) == 0)
+    if(v_len(arr) == 0)
     {
         return 1;
     }
     return 0;
 }
-int check_valid_index(Vector* arr, size_t index)
+int v_check_valid_index(Vector* arr, size_t index)
 {
-	if(!arr)
-	{
-		return 0;	
-	}
-    if(index < 0 || index >= len(arr))
+    if(index >= v_len(arr))
     {
         return 0;
     }
     return 1;
 }
-size_t elemsize(Vector* arr)
+size_t v_elemsize(Vector* arr)
 {
-	if(!arr)
-	{
-		return 0;
-	}
     return arr->elemsize;
 }
-int destroy(Vector* arr)
+int v_destroy(Vector* arr)
 {
-   if(!arr)
-   {
-		return 0;
-   }
    free(arr->data);
    free((void*)arr);
    return 1;
 }
-int empty(Vector* arr)
+int v_clear(Vector* arr)
 {
-	if(!arr)
-	{
-		return 0;
-	}
     arr->length = 0;
-    free(arr->data);
+    // free(arr->data);
     return 1;
 }
-int append(Vector* arr1, Vector* arr2)
+int v_append(Vector* arr1, Vector* arr2)
 {
-	if(!arr1 || !arr2)
-	{
-		return 0;
-	}
     if(arr1->elemsize != arr2->elemsize)
     {
         return 0;
     }
-    if(!resize(arr1, len(arr1) + len(arr2)))
+    size_t old_len = v_len(arr1);        
+    if(!v_resize(arr1, v_len(arr1) + v_len(arr2)))
     {
         return 0;
     }
-    memmove(arr1->data + arr1->elemsize * len(arr1), arr2->data, len(arr2) * arr2->elemsize);
+    void* dst = (char*)arr1->data + arr1->elemsize * old_len;
+    void* src = arr2->data;
+    size_t bytes_to_move = arr2->elemsize * v_len(arr2);
+    memmove(dst, src, bytes_to_move);
     return 1; // honestly i don't know the status of the function memove;
 }
-int delete(Vector* arr, size_t index)
+int v_delete(Vector* arr, size_t index)
 {
-    if(is_empty(arr) || !check_valid_index(arr, index))
+    if(v_is_empty(arr) || !v_check_valid_index(arr, index))
     {
         return 0;
     }
-    if(index < len(arr) - 1)
+    if(index < v_len(arr) - 1)
     {
-        void* dst = arr->data + index * arr->elemsize;
-        void* src = arr->data + (index + 1) * arr->elemsize;
-        size_t bytes_to_move = (len(arr)  - 1 - index) * arr->elemsize;
+        void* dst = (char*)arr->data + index * arr->elemsize;
+        void* src = (char*)arr->data + (index + 1) * arr->elemsize;
+        size_t bytes_to_move = (v_len(arr)  - 1 - index) * arr->elemsize;
         memmove(dst, src, bytes_to_move);
     }
-    pop_back(arr);
+    v_pop_back(arr);
     return 1;
 }
-int pop_back(Vector* arr)
+int v_pop_back(Vector* arr)
 {
-    if(!arr)
+    if(v_len(arr) == 0)
     {
         return 0;
     }
-    void* errChecking = realloc(arr->data, arr->elemsize * (len(arr) - 1));
-    if(!errChecking)
-    {
-        return 0;
-    }
-    arr->data = errChecking;
     arr->length--;
     return 1;
 }
-int resize(Vector* arr, size_t nums_ele)
+int v_resize(Vector* arr, size_t nums_ele)
 {
-    if(!arr)
+    if(nums_ele > arr->capacity)
     {
-        return 0;
-    }
-    void* errCheck = realloc(arr->data, arr->elemsize *  nums_ele);
-    if(!errCheck)
-    {
-        return 0;
+        if(!adjust_cap(arr, nums_ele))
+        {
+            return 0;
+        }
     }
     arr->length = nums_ele;
-    arr->data = errCheck;
     return 1;
 }
-void* get_addr(Vector* arr, size_t index)
+void* v_get_addr(Vector* arr, size_t index)
 {
-    if(!arr || !check_valid_index(arr, index))
+    if(!v_check_valid_index(arr, index))
     {
         return NULL;
     }
-    return arr->data + index * arr->elemsize;
+    return (char*)arr->data + index * arr->elemsize;
 }
 // Non-generical functions. Default implement.
-int ati(Vector* arr, size_t index)
+int v_ati(Vector* arr, size_t index)
 {
-    if(!check_valid_index(arr, index))
+    if(!v_check_valid_index(arr, index))
     {
         return -1;  //place holder
     }
     int* data = (int*)arr->data;
     return data[index];
 }
-int seti(Vector* arr, size_t index, int value)
+int v_seti(Vector* arr, size_t index, int value)
 {
-    if(!check_valid_index(arr, index))
+    if(!v_check_valid_index(arr, index))
     {
         return 0;
     }
-    memcpy(arr->data + index * arr->elemsize, &value, sizeof(value));
+    void* dst = (char*)arr->data + index * arr->elemsize;
+    memcpy(dst, &value, sizeof(value));
     return 1;
 }
-int push_backi(Vector* arr, int value)
+int v_push_backi(Vector* arr, int value)
 {
-	if(!arr)
-	{
-		return 0;
-	}
-    void* errChecking = realloc(arr->data,  arr->elemsize * (len(arr) + 1));
-    if(!errChecking)
+    if(v_len(arr) == arr->capacity)
     {
-        return 0;
+        if(!adjust_cap(arr, v_len(arr) + 1))
+        {
+            return 0;
+        }
     }
-    arr->data = errChecking;    
     arr->length++;
-    seti(arr, arr->length - 1, value);
+    v_seti(arr, v_len(arr) - 1, value);
     return 1;
 }
-int inserti(Vector* arr, size_t index, int value)
+int v_inserti(Vector* arr, size_t index, int value)
 {
-    if(!arr || !check_valid_index(arr, index))
+    if(!v_check_valid_index(arr, index))
     {
         return 0;
-    }
-    if(!resize(arr, len(arr) + 1))
+    }    
+    if(index == v_len(arr))
+    {
+        v_push_backi(arr, value);
+        return 1;
+    }  
+    if(!v_resize(arr, v_len(arr) + 1))
     {
         return 0;
     } 
-    void* dst = arr->data + (index + 1) * arr->elemsize;
-    void* src = arr->data + index * arr->elemsize;
-    size_t bytes_to_move = (len(arr) - index) * arr->elemsize;     
+    void* dst = (char*)arr->data + (index + 1) * arr->elemsize;
+    void* src = (char*)arr->data + index * arr->elemsize;
+    size_t bytes_to_move = (v_len(arr) - 1 - index) * arr->elemsize;       
     memmove(dst, src, bytes_to_move);
-    seti(arr, index, value);
+    v_seti(arr, index, value);
     return 1;
 }
