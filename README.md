@@ -9,12 +9,3 @@ Free to distrobutes, edit, or even send patch, etc. But it has one thing, you ma
 ## Git link
 mirrored at: https://github.com/weobuxjs/CVector.git
 main: https://codeberg.org/WeoBuXCS/CVector.git
-
-## Patches
-If you want to send patches to me, you must follow these rules:
-    tab size is 4 spaces.
-    if conditions must have the open-close bracelets like this:
-    {
-
-    } 
-    
