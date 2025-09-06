@@ -25,20 +25,21 @@ Vector* v_init_vector(size_t size, size_t element_size)
     return arr;
 }
 // internal functions
-static int adjust_cap(Vector* arr, size_t elemsize)
+// This function adjusts capacity depending on new size (or wanted size)
+static int adjust_cap(Vector* arr, size_t new_size)
 {
-    if(elemsize == arr->capacity)
+    if(new_size == arr->capacity)
     {
         return 1;
     }
     size_t nearest_cap;
-    if(!elemsize)
+    if(!new_size)
     {
         nearest_cap = 1;
     }
     else 
     {
-        nearest_cap = (size_t) pow(2, ceill(log2(elemsize)));
+        nearest_cap = (size_t) pow(2, ceill(log2(new_size)));
     }
     void* new_data = realloc(arr->data, nearest_cap * arr->elemsize);
     if(!new_data)
