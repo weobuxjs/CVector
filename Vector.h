@@ -3,7 +3,7 @@ Original Author: WeoBuXCS
 email: freenitro.inc@gmail.com
 Dynamic array. It is a C version of C++ vector*/
 #pragma once
-typedef unsigned long long size_t;
+#include <stddef.h>
 typedef struct Vector Vector;
 #ifdef TESTING
     #define ref(x) *(x*)
@@ -34,8 +34,11 @@ int v_delete(Vector*, size_t);
 int v_pop_back(Vector*);
 int v_resize(Vector*, size_t);
 void* v_get_addr(Vector*, size_t);
+void* v_data(Vector*);
 
+//non-generic utils, default declare						
 int v_push_backi(Vector*, int);
 int v_seti(Vector*, size_t, int);
 int v_ati(Vector*, size_t);
 int v_inserti(Vector*, size_t, int);
+

@@ -148,6 +148,10 @@ void* v_get_addr(Vector* arr, size_t index)
     }
     return (char*)arr->data + index * arr->elemsize;
 }
+void* v_data(Vector* arr)
+{
+    return arr->data;
+}
 // Non-generical functions. Default implement.
 int v_ati(Vector* arr, size_t index)
 {
