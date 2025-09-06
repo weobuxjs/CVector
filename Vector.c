@@ -25,21 +25,21 @@ Vector* v_init_vector(size_t size, size_t element_size)
     return arr;
 }
 // internal functions
-// This function adjusts capacity depending on new size (or wanted size)
-static int adjust_cap(Vector* arr, size_t new_size)
+// This function adjusts capacity depending on new length (or wanted length)
+static int adjust_cap(Vector* arr, size_t new_length)
 {
-    if(new_size == arr->capacity)
+    if(new_length == arr->capacity)
     {
         return 1;
     }
     size_t nearest_cap;
-    if(!new_size)
+    if(!new_length)
     {
         nearest_cap = 1;
     }
     else 
     {
-        nearest_cap = (size_t) pow(2, ceill(log2(new_size)));
+        nearest_cap = (size_t) pow(2, ceill(log2(new_length)));
     }
     void* new_data = realloc(arr->data, nearest_cap * arr->elemsize);
     if(!new_data)
@@ -57,7 +57,7 @@ size_t v_len(Vector* arr)
 }
 int v_is_empty(Vector* arr)
 {
-    if(v_len(arr) == 0)
+    if(arr->length == 0)
     {
         return 1;
     }
@@ -65,7 +65,7 @@ int v_is_empty(Vector* arr)
 }
 int v_check_valid_index(Vector* arr, size_t index)
 {
-    if(index >= v_len(arr))
+    if(index >= arr->length)
     {
         return 0;
     }
@@ -93,14 +93,14 @@ int v_append(Vector* arr1, Vector* arr2)
     {
         return 0;
     }
-    size_t old_len = v_len(arr1);        
-    if(!v_resize(arr1, v_len(arr1) + v_len(arr2)))
+    size_t old_len = arr1->length;        
+    if(!v_resize(arr1, arr1->length + arr2->length))
     {
         return 0;
     }
     void* dst = (char*)arr1->data + arr1->elemsize * old_len;
     void* src = arr2->data;
-    size_t bytes_to_move = arr2->elemsize * v_len(arr2);
+    size_t bytes_to_move = arr2->elemsize * arr2->length;
     memmove(dst, src, bytes_to_move);
     return 1; // honestly i don't know the status of the function memove;
 }
@@ -110,11 +110,11 @@ int v_delete(Vector* arr, size_t index)
     {
         return 0;
     }
-    if(index < v_len(arr) - 1)
+    if(index < arr->length - 1)
     {
         void* dst = (char*)arr->data + index * arr->elemsize;
         void* src = (char*)arr->data + (index + 1) * arr->elemsize;
-        size_t bytes_to_move = (v_len(arr)  - 1 - index) * arr->elemsize;
+        size_t bytes_to_move = (arr->length  - 1 - index) * arr->elemsize;
         memmove(dst, src, bytes_to_move);
     }
     v_pop_back(arr);
@@ -122,7 +122,7 @@ int v_delete(Vector* arr, size_t index)
 }
 int v_pop_back(Vector* arr)
 {
-    if(v_len(arr) == 0)
+    if(arr->length == 0)
     {
         return 0;
     }
@@ -175,15 +175,15 @@ int v_seti(Vector* arr, size_t index, int value)
 }
 int v_push_backi(Vector* arr, int value)
 {
-    if(v_len(arr) == arr->capacity)
+    if(arr->length == arr->capacity)
     {
-        if(!adjust_cap(arr, v_len(arr) + 1))
+        if(!adjust_cap(arr, arr->length + 1))
         {
             return 0;
         }
     }
     arr->length++;
-    v_seti(arr, v_len(arr) - 1, value);
+    v_seti(arr, arr->length - 1, value);
     return 1;
 }
 int v_inserti(Vector* arr, size_t index, int value)
@@ -192,18 +192,18 @@ int v_inserti(Vector* arr, size_t index, int value)
     {
         return 0;
     }    
-    if(index == v_len(arr))
+    if(index == arr->length)
     {
         v_push_backi(arr, value);
         return 1;
     }  
-    if(!v_resize(arr, v_len(arr) + 1))
+    if(!v_resize(arr, arr->length + 1))
     {
         return 0;
     } 
     void* dst = (char*)arr->data + (index + 1) * arr->elemsize;
     void* src = (char*)arr->data + index * arr->elemsize;
-    size_t bytes_to_move = (v_len(arr) - 1 - index) * arr->elemsize;       
+    size_t bytes_to_move = (arr->length - 1 - index) * arr->elemsize;       
     memmove(dst, src, bytes_to_move);
     v_seti(arr, index, value);
     return 1;

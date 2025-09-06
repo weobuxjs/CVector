@@ -2,3 +2,4 @@ test.c
 .vscode/
 a.out
 a.exe
+debug.h
