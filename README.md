@@ -11,4 +11,6 @@ mirrored at: https://github.com/weobuxjs/CVector.git
 
 main: https://codeberg.org/WeoBuXCS/CVector.git
 
-
+## Note on using
+This library uses math library. Please add flag -lm to using it properly. This 
+can be changed in the future.
